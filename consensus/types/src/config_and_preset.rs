@@ -1,6 +1,6 @@
 use crate::{
     consts::altair, consts::deneb, AltairPreset, BasePreset, BellatrixPreset, CapellaPreset,
-    ChainSpec, Config, DenebPreset, ElectraPreset, EthSpec, ForkName, FuluPreset,
+    ChainSpec, Config, DenebPreset, ElectraPreset, EthSpec, ForkName, FuluPreset, GloasPreset,
 };
 use maplit::hashmap;
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use superstruct::superstruct;
 ///
 /// Mostly useful for the API.
 #[superstruct(
-    variants(Deneb, Electra, Fulu),
+    variants(Deneb, Electra, Fulu, Gloas),
     variant_attributes(derive(Serialize, Deserialize, Debug, PartialEq, Clone))
 )]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -31,12 +31,15 @@ pub struct ConfigAndPreset {
     pub capella_preset: CapellaPreset,
     #[serde(flatten)]
     pub deneb_preset: DenebPreset,
-    #[superstruct(only(Electra, Fulu))]
+    #[superstruct(only(Electra, Fulu, Gloas))]
     #[serde(flatten)]
     pub electra_preset: ElectraPreset,
-    #[superstruct(only(Fulu))]
+    #[superstruct(only(Fulu, Gloas))]
     #[serde(flatten)]
     pub fulu_preset: FuluPreset,
+    #[superstruct(only(Gloas))]
+    #[serde(flatten)]
+    pub gloas_preset: GloasPreset,
     /// The `extra_fields` map allows us to gracefully decode fields intended for future hard forks.
     #[serde(flatten)]
     pub extra_fields: HashMap<String, Value>,
@@ -53,7 +56,27 @@ impl ConfigAndPreset {
         let deneb_preset = DenebPreset::from_chain_spec::<E>(spec);
         let extra_fields = get_extra_fields(spec);
 
-        if spec.fulu_fork_epoch.is_some()
+        if spec.gloas_fork_epoch.is_some()
+            || fork_name.is_none()
+            || fork_name == Some(ForkName::Gloas)
+        {
+            let electra_preset = ElectraPreset::from_chain_spec::<E>(spec);
+            let fulu_preset = FuluPreset::from_chain_spec::<E>(spec);
+            let gloas_preset = GloasPreset::from_chain_spec::<E>(spec);
+
+            ConfigAndPreset::Gloas(ConfigAndPresetGloas {
+                config,
+                base_preset,
+                altair_preset,
+                bellatrix_preset,
+                capella_preset,
+                deneb_preset,
+                electra_preset,
+                fulu_preset,
+                gloas_preset,
+                extra_fields,
+            })
+        } else if spec.fulu_fork_epoch.is_some()
             || fork_name.is_none()
             || fork_name == Some(ForkName::Fulu)
         {
@@ -171,8 +194,8 @@ mod test {
             .write(false)
             .open(tmp_file.as_ref())
             .expect("error while opening the file");
-        let from: ConfigAndPresetFulu =
+        let from: ConfigAndPresetGloas =
             serde_yaml::from_reader(reader).expect("error while deserializing");
-        assert_eq!(ConfigAndPreset::Fulu(from), yamlconfig);
+        assert_eq!(ConfigAndPreset::Gloas(from), yamlconfig);
     }
 }

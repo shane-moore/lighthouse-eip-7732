@@ -21,7 +21,7 @@ use types::{
     LightClientOptimisticUpdate, LightClientUpdate, RuntimeVariableList, SignedBeaconBlock,
     SignedBeaconBlockAltair, SignedBeaconBlockBase, SignedBeaconBlockBellatrix,
     SignedBeaconBlockCapella, SignedBeaconBlockDeneb, SignedBeaconBlockElectra,
-    SignedBeaconBlockFulu,
+    SignedBeaconBlockFulu, SignedBeaconBlockGloas,
 };
 use unsigned_varint::codec::Uvi;
 
@@ -475,6 +475,9 @@ fn context_bytes<E: EthSpec>(
                     return match **ref_box_block {
                         // NOTE: If you are adding another fork type here, be sure to modify the
                         //       `fork_context.to_context_bytes()` function to support it as well!
+                        SignedBeaconBlock::Gloas { .. } => {
+                            fork_context.to_context_bytes(ForkName::Gloas)
+                        }
                         SignedBeaconBlock::Fulu { .. } => {
                             fork_context.to_context_bytes(ForkName::Fulu)
                         }
@@ -885,6 +888,9 @@ fn handle_rpc_response<E: EthSpec>(
             Some(ForkName::Fulu) => Ok(Some(RpcSuccessResponse::BlocksByRange(Arc::new(
                 SignedBeaconBlock::Fulu(SignedBeaconBlockFulu::from_ssz_bytes(decoded_buffer)?),
             )))),
+            Some(ForkName::Gloas) => Ok(Some(RpcSuccessResponse::BlocksByRange(Arc::new(
+                SignedBeaconBlock::Gloas(SignedBeaconBlockGloas::from_ssz_bytes(decoded_buffer)?),
+            )))),
             None => Err(RPCError::ErrorResponse(
                 RpcErrorResponse::InvalidRequest,
                 format!(
@@ -920,6 +926,9 @@ fn handle_rpc_response<E: EthSpec>(
             )))),
             Some(ForkName::Fulu) => Ok(Some(RpcSuccessResponse::BlocksByRoot(Arc::new(
                 SignedBeaconBlock::Fulu(SignedBeaconBlockFulu::from_ssz_bytes(decoded_buffer)?),
+            )))),
+            Some(ForkName::Gloas) => Ok(Some(RpcSuccessResponse::BlocksByRoot(Arc::new(
+                SignedBeaconBlock::Gloas(SignedBeaconBlockGloas::from_ssz_bytes(decoded_buffer)?),
             )))),
             None => Err(RPCError::ErrorResponse(
                 RpcErrorResponse::InvalidRequest,
@@ -974,6 +983,7 @@ mod tests {
         let deneb_fork_epoch = Epoch::new(4);
         let electra_fork_epoch = Epoch::new(5);
         let fulu_fork_epoch = Epoch::new(6);
+        let gloas_fork_epoch = Epoch::new(7);
 
         chain_spec.altair_fork_epoch = Some(altair_fork_epoch);
         chain_spec.bellatrix_fork_epoch = Some(bellatrix_fork_epoch);
@@ -990,6 +1000,7 @@ mod tests {
             ForkName::Deneb => deneb_fork_epoch.start_slot(Spec::slots_per_epoch()),
             ForkName::Electra => electra_fork_epoch.start_slot(Spec::slots_per_epoch()),
             ForkName::Fulu => fulu_fork_epoch.start_slot(Spec::slots_per_epoch()),
+            ForkName::Gloas => gloas_fork_epoch.start_slot(Spec::slots_per_epoch()),
         };
         ForkContext::new::<Spec>(current_slot, Hash256::zero(), &chain_spec)
     }
@@ -1328,7 +1339,7 @@ mod tests {
             encode_then_decode_response(
                 SupportedProtocol::StatusV1,
                 RpcResponse::Success(RpcSuccessResponse::Status(status_message_v2())),
-                ForkName::Fulu,
+                ForkName::Gloas,
                 &chain_spec,
             ),
             Ok(Some(RpcSuccessResponse::Status(status_message_v1())))

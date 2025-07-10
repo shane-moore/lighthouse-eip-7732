@@ -28,6 +28,7 @@ pub fn fork_context(fork_name: ForkName) -> ForkContext {
     let deneb_fork_epoch = Epoch::new(4);
     let electra_fork_epoch = Epoch::new(5);
     let fulu_fork_epoch = Epoch::new(6);
+    let gloas_fork_epoch = Epoch::new(7);
 
     chain_spec.altair_fork_epoch = Some(altair_fork_epoch);
     chain_spec.bellatrix_fork_epoch = Some(bellatrix_fork_epoch);
@@ -35,6 +36,7 @@ pub fn fork_context(fork_name: ForkName) -> ForkContext {
     chain_spec.deneb_fork_epoch = Some(deneb_fork_epoch);
     chain_spec.electra_fork_epoch = Some(electra_fork_epoch);
     chain_spec.fulu_fork_epoch = Some(fulu_fork_epoch);
+    chain_spec.gloas_fork_epoch = Some(gloas_fork_epoch);
 
     let current_slot = match fork_name {
         ForkName::Base => Slot::new(0),
@@ -44,6 +46,7 @@ pub fn fork_context(fork_name: ForkName) -> ForkContext {
         ForkName::Deneb => deneb_fork_epoch.start_slot(E::slots_per_epoch()),
         ForkName::Electra => electra_fork_epoch.start_slot(E::slots_per_epoch()),
         ForkName::Fulu => fulu_fork_epoch.start_slot(E::slots_per_epoch()),
+        ForkName::Gloas => gloas_fork_epoch.start_slot(E::slots_per_epoch()),
     };
     ForkContext::new::<E>(current_slot, Hash256::zero(), &chain_spec)
 }
@@ -68,13 +71,11 @@ impl std::ops::DerefMut for Libp2pInstance {
     }
 }
 
-#[allow(unused)]
 pub fn build_tracing_subscriber(level: &str, enabled: bool) {
     if enabled {
-        tracing_subscriber::fmt()
+        let _ = tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::try_new(level).unwrap())
-            .try_init()
-            .unwrap();
+            .try_init();
     }
 }
 
