@@ -27,6 +27,8 @@ pub enum Domain {
     SyncCommittee,
     ContributionAndProof,
     SyncCommitteeSelectionProof,
+    BeaconBuilder,
+    PTCAttester,
     ApplicationMask(ApplicationDomain),
 }
 
@@ -111,6 +113,8 @@ pub struct ChainSpec {
     pub(crate) domain_voluntary_exit: u32,
     pub(crate) domain_selection_proof: u32,
     pub(crate) domain_aggregate_and_proof: u32,
+    pub(crate) domain_beacon_builder: u32,
+    pub(crate) domain_ptc_attester: u32,
 
     /*
      * Fork choice
@@ -506,6 +510,8 @@ impl ChainSpec {
             Domain::VoluntaryExit => self.domain_voluntary_exit,
             Domain::SelectionProof => self.domain_selection_proof,
             Domain::AggregateAndProof => self.domain_aggregate_and_proof,
+            Domain::BeaconBuilder => self.domain_beacon_builder,
+            Domain::PTCAttester => self.domain_ptc_attester,
             Domain::SyncCommittee => self.domain_sync_committee,
             Domain::ContributionAndProof => self.domain_contribution_and_proof,
             Domain::SyncCommitteeSelectionProof => self.domain_sync_committee_selection_proof,
@@ -949,6 +955,8 @@ impl ChainSpec {
             domain_voluntary_exit: 4,
             domain_selection_proof: 5,
             domain_aggregate_and_proof: 6,
+            domain_beacon_builder: 0x1B,
+            domain_ptc_attester: 0x0C,
 
             /*
              * Fork choice
@@ -1296,6 +1304,8 @@ impl ChainSpec {
             domain_voluntary_exit: 4,
             domain_selection_proof: 5,
             domain_aggregate_and_proof: 6,
+            domain_beacon_builder: 0x1B,
+            domain_ptc_attester: 0x0C,
 
             /*
              * Fork choice
@@ -2416,6 +2426,8 @@ mod tests {
             spec.domain_aggregate_and_proof,
             &spec,
         );
+        test_domain(Domain::BeaconBuilder, spec.domain_beacon_builder, &spec);
+        test_domain(Domain::PTCAttester, spec.domain_ptc_attester, &spec);
         test_domain(Domain::SyncCommittee, spec.domain_sync_committee, &spec);
 
         // The builder domain index is zero
