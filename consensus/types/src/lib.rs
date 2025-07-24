@@ -49,6 +49,7 @@ pub mod graffiti;
 pub mod historical_batch;
 pub mod historical_summary;
 pub mod indexed_attestation;
+pub mod indexed_payload_attestation;
 pub mod light_client_bootstrap;
 pub mod light_client_finality_update;
 pub mod light_client_optimistic_update;
@@ -85,6 +86,9 @@ pub mod execution_requests;
 pub mod fork_context;
 pub mod participation_flags;
 pub mod payload;
+pub mod payload_attestation;
+pub mod payload_attestation_data;
+pub mod payload_attestation_message;
 pub mod preset;
 pub mod slot_epoch;
 pub mod subnet_id;
@@ -187,6 +191,10 @@ pub use crate::historical_batch::HistoricalBatch;
 pub use crate::indexed_attestation::{
     IndexedAttestation, IndexedAttestationBase, IndexedAttestationElectra, IndexedAttestationRef,
 };
+pub use crate::indexed_payload_attestation::{
+    IndexedPayloadAttestation, IndexedPayloadAttestationGloas, IndexedPayloadAttestationNextFork,
+    IndexedPayloadAttestationRef,
+};
 pub use crate::light_client_bootstrap::{
     LightClientBootstrap, LightClientBootstrapAltair, LightClientBootstrapCapella,
     LightClientBootstrapDeneb, LightClientBootstrapElectra, LightClientBootstrapFulu,
@@ -219,6 +227,17 @@ pub use crate::payload::{
     BlindedPayloadRef, BlockType, ExecPayload, FullPayload, FullPayloadBellatrix,
     FullPayloadCapella, FullPayloadDeneb, FullPayloadElectra, FullPayloadFulu, FullPayloadGloas,
     FullPayloadRef, OwnedExecPayload,
+};
+pub use crate::payload_attestation::{
+    PayloadAttestation, PayloadAttestationGloas, PayloadAttestationNextFork, PayloadAttestationRef,
+};
+pub use crate::payload_attestation_data::{
+    PayloadAttestationData, PayloadAttestationDataGloas, PayloadAttestationDataNextFork,
+    PayloadAttestationDataRef,
+};
+pub use crate::payload_attestation_message::{
+    PayloadAttestationMessage, PayloadAttestationMessageGloas, PayloadAttestationMessageNextFork,
+    PayloadAttestationMessageRef,
 };
 pub use crate::pending_attestation::PendingAttestation;
 pub use crate::pending_consolidation::PendingConsolidation;
