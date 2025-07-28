@@ -50,10 +50,11 @@ pub struct ExecutionPayloadHeader<E: EthSpec> {
     #[superstruct(getter(copy))]
     #[serde(with = "serde_utils::address_hex")]
     pub fee_recipient: Address,
-    #[superstruct(getter(copy))]
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu), getter(copy))]
     pub state_root: Hash256,
-    #[superstruct(getter(copy))]
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu), getter(copy))]
     pub receipts_root: Hash256,
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu))]
     #[serde(with = "ssz_types::serde_utils::hex_fixed_vec")]
     pub logs_bloom: FixedVector<u8, E::BytesPerLogsBloom>,
     #[superstruct(getter(copy))]
@@ -77,7 +78,7 @@ pub struct ExecutionPayloadHeader<E: EthSpec> {
     pub base_fee_per_gas: Uint256,
     #[superstruct(getter(copy))]
     pub block_hash: ExecutionBlockHash,
-    #[superstruct(getter(copy))]
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu), getter(copy))]
     pub transactions_root: Hash256,
     #[superstruct(only(Capella, Deneb, Electra, Fulu, Gloas), partial_getter(copy))]
     pub withdrawals_root: Hash256,
@@ -87,6 +88,21 @@ pub struct ExecutionPayloadHeader<E: EthSpec> {
     #[superstruct(only(Deneb, Electra, Fulu, Gloas), partial_getter(copy))]
     #[serde(with = "serde_utils::quoted_u64")]
     pub excess_blob_gas: u64,
+
+    // New delayed‑execution fields
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub pre_state_root: Hash256,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_transactions_root: Hash256,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_receipts_root: Hash256,
+    #[superstruct(only(Gloas))]
+    #[serde(with = "ssz_types::serde_utils::hex_fixed_vec")]
+    pub parent_bloom: LogsBloom,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_requests_hash: Hash256,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_execution_reverted: bool,
 }
 
 impl<E: EthSpec> ExecutionPayloadHeader<E> {
@@ -245,9 +261,6 @@ impl<E: EthSpec> ExecutionPayloadHeaderFulu<E> {
         ExecutionPayloadHeaderGloas {
             parent_hash: self.parent_hash,
             fee_recipient: self.fee_recipient,
-            state_root: self.state_root,
-            receipts_root: self.receipts_root,
-            logs_bloom: self.logs_bloom.clone(),
             prev_randao: self.prev_randao,
             block_number: self.block_number,
             gas_limit: self.gas_limit,
@@ -256,10 +269,15 @@ impl<E: EthSpec> ExecutionPayloadHeaderFulu<E> {
             extra_data: self.extra_data.clone(),
             base_fee_per_gas: self.base_fee_per_gas,
             block_hash: self.block_hash,
-            transactions_root: self.transactions_root,
             withdrawals_root: self.withdrawals_root,
             blob_gas_used: self.blob_gas_used,
             excess_blob_gas: self.excess_blob_gas,
+            pre_state_root: self.pre_state_root,
+            parent_transactions_root: self.parent_transactions_root,
+            parent_receipts_root: self.parent_receipts_root,
+            parent_bloom: self.parent_bloom,
+            parent_requests_hash: self.parent_requests_hash,
+            parent_execution_reverted: self.parent_execution_reverted,
         }
     }
 }
@@ -384,9 +402,6 @@ impl<'a, E: EthSpec> From<&'a ExecutionPayloadGloas<E>> for ExecutionPayloadHead
         Self {
             parent_hash: payload.parent_hash,
             fee_recipient: payload.fee_recipient,
-            state_root: payload.state_root,
-            receipts_root: payload.receipts_root,
-            logs_bloom: payload.logs_bloom.clone(),
             prev_randao: payload.prev_randao,
             block_number: payload.block_number,
             gas_limit: payload.gas_limit,
@@ -395,10 +410,15 @@ impl<'a, E: EthSpec> From<&'a ExecutionPayloadGloas<E>> for ExecutionPayloadHead
             extra_data: payload.extra_data.clone(),
             base_fee_per_gas: payload.base_fee_per_gas,
             block_hash: payload.block_hash,
-            transactions_root: payload.transactions.tree_hash_root(),
             withdrawals_root: payload.withdrawals.tree_hash_root(),
             blob_gas_used: payload.blob_gas_used,
             excess_blob_gas: payload.excess_blob_gas,
+            pre_state_root: payload.pre_state_root,
+            parent_transactions_root: payload.parent_transactions_root,
+            parent_receipts_root: payload.parent_receipts_root,
+            parent_bloom: payload.parent_bloom.clone(),
+            parent_requests_hash: payload.parent_requests_hash,
+            parent_execution_reverted: payload.parent_execution_reverted,
         }
     }
 }

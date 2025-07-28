@@ -546,9 +546,6 @@ impl<E: EthSpec> ExecutionPayloadBodyV1<E> {
                     Ok(ExecutionPayload::Gloas(ExecutionPayloadGloas {
                         parent_hash: header.parent_hash,
                         fee_recipient: header.fee_recipient,
-                        state_root: header.state_root,
-                        receipts_root: header.receipts_root,
-                        logs_bloom: header.logs_bloom,
                         prev_randao: header.prev_randao,
                         block_number: header.block_number,
                         gas_limit: header.gas_limit,
@@ -561,6 +558,13 @@ impl<E: EthSpec> ExecutionPayloadBodyV1<E> {
                         withdrawals,
                         blob_gas_used: header.blob_gas_used,
                         excess_blob_gas: header.excess_blob_gas,
+                        // EIP-7732 delayed execution fields
+                        pre_state_root: header.pre_state_root,
+                        parent_transactions_root: header.parent_transactions_root,
+                        parent_receipts_root: header.parent_receipts_root,
+                        parent_bloom: header.parent_bloom,
+                        parent_requests_hash: header.parent_requests_hash,
+                        parent_execution_reverted: header.parent_execution_reverted,
                     }))
                 } else {
                     Err(format!(
