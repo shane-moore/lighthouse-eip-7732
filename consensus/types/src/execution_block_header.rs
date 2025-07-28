@@ -23,6 +23,14 @@ use metastruct::metastruct;
 
 /// Execution block header as used for RLP encoding and Keccak hashing.
 ///
+/// For EIP-7886 delayed execution (Gloas fork), the block header maintains
+/// RLP compatibility by setting legacy fields to default values:
+/// - state_root: Set to zero (actual pre-execution state is in EIP-7886 fields)
+/// - receipts_root: Set to zero (actual parent receipts are in EIP-7886 fields)
+/// - logs_bloom: Set to zero bloom (actual parent bloom is in EIP-7886 fields)
+///
+/// The EIP-7886 delayed execution fields would be appended to the RLP structure.
+///
 /// Credit to Reth for the type definition.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[metastruct(mappings(map_execution_block_header_fields_base(exclude(
@@ -53,6 +61,20 @@ pub struct ExecutionBlockHeader {
     pub excess_blob_gas: Option<u64>,
     pub parent_beacon_block_root: Option<Hash256>,
     pub requests_root: Option<Hash256>,
+    // EIP-7886 delayed execution fields (Gloas fork and later)
+    pub pre_state_root: Option<Hash256>,
+    pub parent_transactions_root: Option<Hash256>,
+    pub parent_receipts_root: Option<Hash256>,
+    pub parent_bloom: Option<Vec<u8>>,
+    pub parent_requests_hash: Option<Hash256>,
+    pub parent_execution_reverted: Option<bool>,
+    // EIP-7886 delayed execution fields (Gloas fork and later)
+    pub pre_state_root: Option<Hash256>,
+    pub parent_transactions_root: Option<Hash256>,
+    pub parent_receipts_root: Option<Hash256>,
+    pub parent_bloom: Option<Vec<u8>>,
+    pub parent_requests_hash: Option<Hash256>,
+    pub parent_execution_reverted: Option<bool>,
 }
 
 impl ExecutionBlockHeader {
@@ -69,6 +91,12 @@ impl ExecutionBlockHeader {
     ) -> Self {
         // Most of these field mappings are defined in EIP-3675 except for `mixHash`, which is
         // defined in EIP-4399.
+        // For EIP-7886 (Gloas fork), the execution block header uses different fields
+        // to support delayed execution.
+
+        // For EIP-7886 (Gloas fork), the execution block header uses different fields
+        // to support delayed execution.
+
         ExecutionBlockHeader {
             parent_hash: payload.parent_hash().into_root(),
             ommers_hash: rlp_empty_list_root,
@@ -91,6 +119,13 @@ impl ExecutionBlockHeader {
             excess_blob_gas: rlp_excess_blob_gas,
             parent_beacon_block_root: rlp_parent_beacon_block_root,
             requests_root: rlp_requests_root,
+            // EIP-7886 delayed execution fields (automatically None for pre-Gloas forks)
+            pre_state_root: payload.pre_state_root(),
+            parent_transactions_root: payload.parent_transactions_root(),
+            parent_receipts_root: payload.parent_receipts_root(),
+            parent_bloom: payload.parent_bloom().clone().into(),
+            parent_requests_hash: payload.parent_requests_hash(),
+            parent_execution_reverted: payload.parent_execution_reverted(),
         }
     }
 }
@@ -119,6 +154,14 @@ pub struct EncodableExecutionBlockHeader<'a> {
     pub excess_blob_gas: Option<u64>,
     pub parent_beacon_block_root: Option<&'a [u8]>,
     pub requests_root: Option<&'a [u8]>,
+    // EIP-7886 delayed execution fields (Gloas fork and later)
+    pub pre_state_root: Option<&'a [u8]>,
+    pub parent_transactions_root: Option<&'a [u8]>,
+    pub parent_receipts_root: Option<&'a [u8]>,
+    pub parent_bloom: Option<&'a [u8]>,
+    pub parent_requests_hash: Option<&'a [u8]>,
+    pub parent_execution_reverted: Option<bool>,
+    // EIP-7886 delayed execution fields (Gloas fork and later)
 }
 
 impl<'a> From<&'a ExecutionBlockHeader> for EncodableExecutionBlockHeader<'a> {
@@ -145,7 +188,16 @@ impl<'a> From<&'a ExecutionBlockHeader> for EncodableExecutionBlockHeader<'a> {
             excess_blob_gas: header.excess_blob_gas,
             parent_beacon_block_root: None,
             requests_root: None,
+            // EIP-7886 delayed execution fields
+            pre_state_root: None,
+            parent_transactions_root: None,
+            parent_receipts_root: None,
+            parent_bloom: None,
+            parent_requests_hash: None,
+            parent_execution_reverted: None,
         };
+
+        // Set optional fields if present
         if let Some(withdrawals_root) = &header.withdrawals_root {
             encodable.withdrawals_root = Some(withdrawals_root.as_slice());
         }
@@ -155,6 +207,47 @@ impl<'a> From<&'a ExecutionBlockHeader> for EncodableExecutionBlockHeader<'a> {
         if let Some(requests_root) = &header.requests_root {
             encodable.requests_root = Some(requests_root.as_slice())
         }
+
+        // EIP-7886 delayed execution fields
+        if let Some(pre_state_root) = &header.pre_state_root {
+            encodable.pre_state_root = Some(pre_state_root.as_slice());
+        }
+        if let Some(parent_transactions_root) = &header.parent_transactions_root {
+            encodable.parent_transactions_root = Some(parent_transactions_root.as_slice());
+        }
+        if let Some(parent_receipts_root) = &header.parent_receipts_root {
+            encodable.parent_receipts_root = Some(parent_receipts_root.as_slice());
+        }
+        if let Some(parent_bloom) = &header.parent_bloom {
+            encodable.parent_bloom = Some(parent_bloom.as_slice());
+        }
+        if let Some(parent_requests_hash) = &header.parent_requests_hash {
+            encodable.parent_requests_hash = Some(parent_requests_hash.as_slice());
+        }
+        if let Some(parent_execution_reverted) = header.parent_execution_reverted {
+            encodable.parent_execution_reverted = Some(parent_execution_reverted);
+        }
+
+        // EIP-7886 delayed execution fields
+        if let Some(pre_state_root) = &header.pre_state_root {
+            encodable.pre_state_root = Some(pre_state_root.as_slice());
+        }
+        if let Some(parent_transactions_root) = &header.parent_transactions_root {
+            encodable.parent_transactions_root = Some(parent_transactions_root.as_slice());
+        }
+        if let Some(parent_receipts_root) = &header.parent_receipts_root {
+            encodable.parent_receipts_root = Some(parent_receipts_root.as_slice());
+        }
+        if let Some(parent_bloom) = &header.parent_bloom {
+            encodable.parent_bloom = Some(parent_bloom.as_slice());
+        }
+        if let Some(parent_requests_hash) = &header.parent_requests_hash {
+            encodable.parent_requests_hash = Some(parent_requests_hash.as_slice());
+        }
+        if let Some(parent_execution_reverted) = header.parent_execution_reverted {
+            encodable.parent_execution_reverted = Some(parent_execution_reverted);
+        }
+
         encodable
     }
 }

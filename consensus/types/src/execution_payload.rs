@@ -54,10 +54,11 @@ pub struct ExecutionPayload<E: EthSpec> {
     #[superstruct(getter(copy))]
     #[serde(with = "serde_utils::address_hex")]
     pub fee_recipient: Address,
-    #[superstruct(getter(copy))]
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu), getter(copy))]
     pub state_root: Hash256,
-    #[superstruct(getter(copy))]
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu), getter(copy))]
     pub receipts_root: Hash256,
+    #[superstruct(only(Bellatrix, Capella, Deneb, Electra, Fulu))]
     #[serde(with = "ssz_types::serde_utils::hex_fixed_vec")]
     pub logs_bloom: FixedVector<u8, E::BytesPerLogsBloom>,
     #[superstruct(getter(copy))]
@@ -91,6 +92,21 @@ pub struct ExecutionPayload<E: EthSpec> {
     #[superstruct(only(Deneb, Electra, Fulu, Gloas), partial_getter(copy))]
     #[serde(with = "serde_utils::quoted_u64")]
     pub excess_blob_gas: u64,
+
+    // New delayed execution fields for EIP-7732
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub pre_state_root: Hash256,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_transactions_root: Hash256,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_receipts_root: Hash256,
+    #[superstruct(only(Gloas))]
+    #[serde(with = "ssz_types::serde_utils::hex_fixed_vec")]
+    pub parent_bloom: FixedVector<u8, E::BytesPerLogsBloom>,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_requests_hash: Hash256,
+    #[superstruct(only(Gloas), partial_getter(copy))]
+    pub parent_execution_reverted: bool,
 }
 
 impl<'a, E: EthSpec> ExecutionPayloadRef<'a, E> {

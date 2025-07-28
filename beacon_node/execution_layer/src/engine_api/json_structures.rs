@@ -79,8 +79,11 @@ pub struct JsonExecutionPayload<E: EthSpec> {
     pub parent_hash: ExecutionBlockHash,
     #[serde(with = "serde_utils::address_hex")]
     pub fee_recipient: Address,
+    #[superstruct(only(V1, V2, V3, V4, V5))]
     pub state_root: Hash256,
+    #[superstruct(only(V1, V2, V3, V4, V5))]
     pub receipts_root: Hash256,
+    #[superstruct(only(V1, V2, V3, V4, V5))]
     #[serde(with = "serde_logs_bloom")]
     pub logs_bloom: FixedVector<u8, E::BytesPerLogsBloom>,
     pub prev_randao: Hash256,
@@ -108,6 +111,21 @@ pub struct JsonExecutionPayload<E: EthSpec> {
     #[superstruct(only(V3, V4, V5, V6))]
     #[serde(with = "serde_utils::u64_hex_be")]
     pub excess_blob_gas: u64,
+
+    // New delayed execution fields for EIP-7732 (V6 only)
+    #[superstruct(only(V6))]
+    pub pre_state_root: Hash256,
+    #[superstruct(only(V6))]
+    pub parent_transactions_root: Hash256,
+    #[superstruct(only(V6))]
+    pub parent_receipts_root: Hash256,
+    #[superstruct(only(V6))]
+    #[serde(with = "serde_logs_bloom")]
+    pub parent_bloom: FixedVector<u8, E::BytesPerLogsBloom>,
+    #[superstruct(only(V6))]
+    pub parent_requests_hash: Hash256,
+    #[superstruct(only(V6))]
+    pub parent_execution_reverted: bool,
 }
 
 impl<E: EthSpec> From<ExecutionPayloadBellatrix<E>> for JsonExecutionPayloadV1<E> {
@@ -248,9 +266,6 @@ impl<E: EthSpec> From<ExecutionPayloadGloas<E>> for JsonExecutionPayloadV6<E> {
         JsonExecutionPayloadV6 {
             parent_hash: payload.parent_hash,
             fee_recipient: payload.fee_recipient,
-            state_root: payload.state_root,
-            receipts_root: payload.receipts_root,
-            logs_bloom: payload.logs_bloom,
             prev_randao: payload.prev_randao,
             block_number: payload.block_number,
             gas_limit: payload.gas_limit,
@@ -268,6 +283,13 @@ impl<E: EthSpec> From<ExecutionPayloadGloas<E>> for JsonExecutionPayloadV6<E> {
                 .into(),
             blob_gas_used: payload.blob_gas_used,
             excess_blob_gas: payload.excess_blob_gas,
+            // EIP-7732 delayed execution fields
+            pre_state_root: payload.pre_state_root,
+            parent_transactions_root: payload.parent_transactions_root,
+            parent_receipts_root: payload.parent_receipts_root,
+            parent_bloom: payload.parent_bloom,
+            parent_requests_hash: payload.parent_requests_hash,
+            parent_execution_reverted: payload.parent_execution_reverted,
         }
     }
 }
@@ -424,9 +446,6 @@ impl<E: EthSpec> From<JsonExecutionPayloadV6<E>> for ExecutionPayloadGloas<E> {
         ExecutionPayloadGloas {
             parent_hash: payload.parent_hash,
             fee_recipient: payload.fee_recipient,
-            state_root: payload.state_root,
-            receipts_root: payload.receipts_root,
-            logs_bloom: payload.logs_bloom,
             prev_randao: payload.prev_randao,
             block_number: payload.block_number,
             gas_limit: payload.gas_limit,
@@ -444,6 +463,13 @@ impl<E: EthSpec> From<JsonExecutionPayloadV6<E>> for ExecutionPayloadGloas<E> {
                 .into(),
             blob_gas_used: payload.blob_gas_used,
             excess_blob_gas: payload.excess_blob_gas,
+            // EIP-7732 delayed execution fields
+            pre_state_root: payload.pre_state_root,
+            parent_transactions_root: payload.parent_transactions_root,
+            parent_receipts_root: payload.parent_receipts_root,
+            parent_bloom: payload.parent_bloom,
+            parent_requests_hash: payload.parent_requests_hash,
+            parent_execution_reverted: payload.parent_execution_reverted,
         }
     }
 }
